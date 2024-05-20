@@ -6,7 +6,7 @@ Created on Mon May 20 13:12:32 2024
 """
 
 
-import numpy as np
+import numpy as npp
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
