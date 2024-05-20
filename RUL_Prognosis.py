@@ -231,8 +231,24 @@ batch_size = 256
 history = Regressor.fit(data1, labels, batch_size=batch_size, epochs=epochs,shuffle = True)
 # history = Regressor.fit(X_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(X_test, y_test),shuffle = True)
 
+import h5py
+from keras.models import load_model
+
+Regressor.save('model1.h5')
 
 
+def rmse(y_true, y_pred):
+	return backend.sqrt(backend.mean(backend.square(y_pred - y_true)))
+
+
+Regressor = load_model('model1.h5',custom_objects={'rmse':rmse})
+
+
+
+import tf2onnx
+
+# Convert the Keras model to ONNX
+model_proto, _ = tf2onnx.convert.from_keras(Regressor, output_path="model.onnx")
 
 y_pred0 = Regressor.predict(data1[:2802])
 y_pred1 = Regressor.predict(data1[2802:3674])
@@ -283,6 +299,11 @@ ax.set(xlabel='Time (s)', ylabel='Health Indicator')
 
 
 
+Regressor.save("model1.h5")
+
+Regressor = load_model('model1.h5')
+def rmse(y_true, y_pred):
+	return backend.sqrt(backend.mean(backend.square(y_pred - y_true)))
 
 # Make predictions
 y_pred = Regressor.predict(data1)
