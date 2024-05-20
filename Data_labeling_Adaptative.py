@@ -6,7 +6,7 @@ Created on Mon May 20 13:12:32 2024
 """
 
 
-import numpy as npp
+import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
@@ -617,7 +617,7 @@ import matplotlib.pyplot as plt
 # Load the data
 file_path = 'Train_data_H.csv'  # Replace with your actual file path
 data = pd.read_csv(file_path, header=None)
-data = data.drop(data.index[[0, 2803, 3672]])
+data = data.drop(data.index[[0, 2803,3684, 3672]])
 
 # Define the lengths of the bearings
 bearing_lengths = [2802, 870, 911, 797, 515, 1637]
@@ -718,7 +718,7 @@ import matplotlib.pyplot as plt
 # Load the data
 file_path = 'Train_data_H.csv'  # Replace with your actual file path
 data = pd.read_csv(file_path, header=None)
-data = data.drop(data.index[[0, 2803, 3672]])
+data = data.drop(data.index[[0, 2803,3684, 3672]])
 
 # Define the lengths of the bearings
 bearing_lengths = [2802, 870, 911, 797, 515, 1637]
@@ -775,8 +775,8 @@ for i, length in enumerate(bearing_lengths):
     normalized_peak_to_peak, _ = normalize_features(peak_to_peak)
     
     # Combine features into a composite health indicator
-    composite_health_indicator = (normalized_rms + normalized_kurtosis + normalized_skewness + normalized_crest_factor + normalized_peak_to_peak) / 5
-    
+    # composite_health_indicator = (normalized_rms + normalized_kurtosis + normalized_skewness + normalized_crest_factor + normalized_peak_to_peak) / 5
+    composite_health_indicator = normalized_rms
     # Fit spline model to the composite health indicator
     x_data = np.arange(len(composite_health_indicator))
     spline_model = fit_spline(x_data, composite_health_indicator)
