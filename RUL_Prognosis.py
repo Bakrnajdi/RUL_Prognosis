@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 # import utils
 import pywt
-import os,glob  
+import os,glob
 import random
 import numpy.linalg as linalg
 import seaborn as sns
@@ -78,7 +78,7 @@ config.gpu_options.allow_growth = True
 sess = tf.compat.v1.Session(config=config)
 
 
-data = pd.read_csv('Train_data_H.csv',index_col=[0])
+data = pd.read_csv('..\\Train_data_H.csv',index_col=[0])
 data = data.reset_index(drop=True)
 data = data.drop(data.index[[0, 2803, 3672]])
 # cnn_data = pd.DataFrame(cnn_data)
@@ -176,7 +176,7 @@ labels =np.array(pd.concat(label,ignore_index=True))
 
 
 # labels = np.array(all_health_indicators)
-labels = np.array(pd.read_csv('bearing_health_indicators.csv'))
+labels = np.array(pd.read_csv('..\\bearing_health_indicators.csv'))
 
 
 X_train, X_test, y_train, y_test = train_test_split(data1, np.array(labels), test_size=0.2, random_state=0)

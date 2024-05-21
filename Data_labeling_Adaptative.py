@@ -716,7 +716,7 @@ from scipy.interpolate import UnivariateSpline
 import matplotlib.pyplot as plt
 
 # Load the data
-file_path = 'Train_data_H.csv'  # Replace with your actual file path
+file_path = '..\\Train_data_H.csv'  # Replace with your actual file path
 data = pd.read_csv(file_path, header=None)
 data = data.drop(data.index[[0, 2803,3684, 3672]])
 
