@@ -234,12 +234,16 @@ history = Regressor.fit(data1, labels, batch_size=batch_size, epochs=epochs,shuf
 import h5py
 from keras.models import load_model
 
-Regressor.save('model1.h5')
+Regressor.save('..\\model1.h5')
 
 
 def rmse(y_true, y_pred):
 	return backend.sqrt(backend.mean(backend.square(y_pred - y_true)))
 
+import tensorflow as tf
+
+# Load the model in the SavedModel format
+Regressor = tf.keras.models.load_model("model1.h5", custom_objects={'rmse': rmse})
 
 Regressor = load_model('model1.h5',custom_objects={'rmse':rmse})
 
