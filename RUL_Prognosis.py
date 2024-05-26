@@ -47,16 +47,8 @@ from cwt_rp import ssq_cwt1
 from tensorflow.keras.mixed_precision import set_global_policy
 set_global_policy('float32')
 
-import tensorflow as tf
-from tensorflow.keras import layers, models
-
-import numpy as np
-import random
-
-SEED = 42
-tf.random.set_seed(SEED)
-np.random.seed(SEED)
-random.seed(SEED)
+from config import set_seed
+set_seed()
 
 # import faulthandler
 # faulthandler.enable() 
@@ -65,7 +57,7 @@ gpus = tf.config.list_physical_devices('GPU')
 for gpu in gpus:
     print("Name:", gpu.name, "  Type:", gpu.device_type)
 
-tf.device('GPU: 0')
+# tf.device('GPU: 0')
 
 tf.config.set_visible_devices([], 'GPU')
     
@@ -78,16 +70,43 @@ config.gpu_options.allow_growth = True
 sess = tf.compat.v1.Session(config=config)
 
 
+<<<<<<< HEAD
+# data = pd.read_csv('Train_data_H.csv')
+# data = data.reset_index(drop=True)
+# data = data.drop(data.index[[0, 2803, 3684, 3672]])
+=======
 data = pd.read_csv('..\\Train_data_H.csv',index_col=[0])
 data = data.reset_index(drop=True)
 data = data.drop(data.index[[0, 2803, 3672]])
+>>>>>>> refs/remotes/origin/main
 # cnn_data = pd.DataFrame(cnn_data)
-
+# data = data.drop(columns = ['Unnamed: 0'])
 print('cnn data done')
 
-
+data = pd.read_csv('Train_data_H.csv',index_col=[0])
+data = data.reset_index(drop=True)
+data = data.iloc[:,:128]
+# data = data.drop(data.index[[0, 2803, 3684, 3672]])
 # data = np.delete(data,3686)
 
+
+# data = pd.read_csv('Train_data_H.csv',index_col=[0])
+# data = data.reset_index(drop=True)
+
+n = 2560
+signal = []
+for i in range(len(data)):
+    idx = random.randint(0,n)
+    if idx>=(n-128):
+        sample = data.iloc[i][idx-128:idx]
+    else: 
+        sample = data.iloc[i][idx:idx+128]
+    signal.append(np.array(sample))
+    
+signal = np.concatenate([signal],axis=0)
+# signal = signal.reshape(signal.shape[0]*signal.shape[1],1)
+
+data = pd.DataFrame(signal)
 
 
 wavelet = 'morlet'
@@ -97,7 +116,7 @@ padtype = 'reflect'
 # one of: 'log', 'log-piecewise', 'linear'
 # 'log-piecewise' lowers low-frequency redundancy; see
 # https://github.com/OverLordGoldDragon/ssqueezepy/issues/29#issuecomment-778526900
-scaletype = 'log-piecewise'
+scaletype = 'linear'
 # one of: 'minimal', 'maximal', 'naive' (not recommended)
 preset = 'maximal'
 # number of voices (wavelets per octave); more = more scales
@@ -114,13 +133,62 @@ wavelet = Wavelet(wavelet, N=M)
 
 x = data.iloc[50]
 x = np.array(x)
-min_scale, max_scale = cwt_scalebounds(wavelet, N=len(x), preset=preset)
+
+min_scale, max_scale = cwt_scalebounds(wavelet, N=len(x), preset=None)
+
 scales = make_scales(N1, min_scale, max_scale, nv=nv, scaletype=scaletype,
                       wavelet=wavelet, downsample=downsample)
 
 
+# q = ssq_cwt1(data.iloc[0],wavelet,scales,padtype,n_components)
+
+def evenly_distribute_elements(array, n):
+    """
+    Select n elements from array ensuring the first element is the first from the list,
+    the last element is the last from the list, and the elements are evenly distributed.
+    """
+    length = len(array)
+    if n > length:
+        raise ValueError("n cannot be greater than the length of the array")
+
+    # Calculate the interval
+    step = (length - 1) / (n - 1)
+
+    # Select the indices
+    indices = [int(round(i * step)) for i in range(n)]
+    
+    # Ensure the first and last elements are correctly assigned
+    indices[0] = 0
+    indices[-1] = length - 1
+
+    # Select elements from the array
+    selected_elements = array[indices]
+
+    return selected_elements
+
+# # Example usage
+n = 128
+scales = evenly_distribute_elements(scales, n)
+# # print("Selected elements:", scales)
+
+# def select_linear_numbers(min_value, max_value, n):
+#     """
+#     Select n linearly spaced numbers between min_value and max_value.
+#     """
+#     return np.linspace(min_value, max_value, n)
+
+# # Example usage
+
+# n = 128
+# linear_numbers = select_linear_numbers(min_scale, max_scale, n)
+# print("Linearly spaced numbers:", linear_numbers)
+
+# # n_components = len(scales)
+
+
 
 n_components = len(scales)
+
 
 new_data = []
 
@@ -135,7 +203,16 @@ for i in range(len(new_data)):
     # m = crop_square(abs(Tx), 128 )
     m = np.resize(m,(128,128,1))
     resData.append(m)
-
+    
+    
+# # Plot the results
+# plt.figure(figsize=(12, 6))
+# plt.imshow(np.abs(resData[0]))
+# plt.title('Synchrosqueezing Wavelet Transform')
+# plt.xlabel('Time')
+# plt.ylabel('Frequency')
+# plt.colorbar(label='Magnitude')
+# plt.show()
 
 
 # resData = []
@@ -156,6 +233,7 @@ data1.shape
 
 
 del resData
+del new_data
 # =============================================================================
 # Split Data into train and test set
 # =============================================================================
@@ -166,7 +244,7 @@ allfiles=np.array(all_files.T)
 
 y0 = pd.DataFrame(np.linspace(0.0,1.0,allfiles[0][0]))
 y1 = pd.DataFrame(np.linspace(0.0,1.0,allfiles[0][1]))
-y2 = pd.DataFrame(np.linspace(0.0,1.0,allfiles[0][2]-1))
+y2 = pd.DataFrame(np.linspace(0.0,1.0,allfiles[0][2]))
 y3 = pd.DataFrame(np.linspace(0.0,1.0,allfiles[0][3]))
 y4 = pd.DataFrame(np.linspace(0.0,1.0,allfiles[0][4]))
 y5 = pd.DataFrame(np.linspace(0.0,1.0,allfiles[0][5]))
@@ -176,17 +254,38 @@ labels =np.array(pd.concat(label,ignore_index=True))
 
 
 # labels = np.array(all_health_indicators)
+<<<<<<< HEAD
+# labels = np.array(pd.read_csv('Segmented_bearing_health_indicators.csv'))
+# labels = np.array(pd.read_csv('Segmented_bearing_health_indicators.csv'))
+labels = np.array(pd.read_csv('Linear_bearing_health_indicators.csv'))
+
+=======
 labels = np.array(pd.read_csv('..\\bearing_health_indicators.csv'))
+>>>>>>> refs/remotes/origin/main
 
 
 X_train, X_test, y_train, y_test = train_test_split(data1, np.array(labels), test_size=0.2, random_state=0)
+import keras.backend as K
 
 def rmse(y_true, y_pred):
-	return backend.sqrt(backend.mean(backend.square(y_pred - y_true)))
+	return K.sqrt(k.mean(k.square(y_pred - y_true)))
 
 # =============================================================================
 # Build CNN model
 # =============================================================================
+from keras import ops
+
+def rmse_loss_fn(y_true, y_pred):
+    """
+    Custom RMSE loss function.
+    :param y_true: True labels.
+    :param y_pred: Predicted labels.
+    :return: RMSE value.
+    """
+    squared_difference = ops.square(y_true - y_pred)
+    mean_squared_difference = ops.mean(squared_difference, axis=-1)  # Note the `axis=-1`
+    return ops.sqrt(mean_squared_difference)
+
 
 # Initialize the model
 Regressor = Sequential()
@@ -217,16 +316,16 @@ Regressor.add(Dense(units=768, activation='relu'))
 Regressor.add(Dropout(0.1))
 Regressor.add(Dense(1, activation='sigmoid'))
 
-optimizer = keras.optimizers.Adam(lr=6.8e-05)
+optimizer = keras.optimizers.Adam(learning_rate=6.8e-05)
 
 # Step 3 - Compiling the model
 #Regressor.compile(loss='mse', optimizer=optimizer, metrics=['mse'])
 # Regressor = Sequential()
 
-Regressor.compile(loss=rmse, optimizer=optimizer, metrics=['mse'])
+Regressor.compile(loss=rmse_loss_fn, optimizer=optimizer, metrics=[keras.metrics.RootMeanSquaredError()])
 
 
-epochs = 20
+epochs = 60
 batch_size = 256
 history = Regressor.fit(data1, labels, batch_size=batch_size, epochs=epochs,shuffle = True)
 # history = Regressor.fit(X_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(X_test, y_test),shuffle = True)
@@ -369,6 +468,62 @@ for i, length in enumerate(bearing_lengths):
     plt.show()
     
     start_idx = end_idx
+
+
+
+
+import os
+import pandas as pd
+
+# Define the root directory containing the bearing folders
+root_dir = "/Users/mac/Desktop/PhD/Prognosis_RUL/phm-ieee-2012-data-challenge-dataset-master/Test_set"  # Change this to your directory path
+
+# List of test bearing folders
+test_bearing_folders = [
+    "Bearing1_3", "Bearing1_4", "Bearing1_5", "Bearing1_6", "Bearing1_7",
+    "Bearing2_3", "Bearing2_4", "Bearing2_5", "Bearing2_6", "Bearing2_7",
+    "Bearing3_3"
+]
+
+# Initialize a list to hold the data
+data_list = []
+
+# Dictionary to hold the number of files processed in each folder
+files_count = {}
+
+# Process each test bearing folder
+for folder in test_bearing_folders:
+    folder_path = os.path.join(root_dir, folder)
+    count = 0  # Initialize the count of files for this folder
+    for file_name in os.listdir(folder_path):
+        if file_name.startswith('acc') and file_name.endswith('.csv'):
+            file_path = os.path.join(folder_path, file_name)
+            # Read the CSV file
+            df = pd.read_csv(file_path, header=None)
+            # Extract the 5th column (index 4) with 2560 observations
+            x_vibrational_signal = df.iloc[:, 4].values
+            # Append to the data list
+            data_list.append(x_vibrational_signal)
+            count += 1  # Increment the count
+    # Save the count for this folder
+    files_count[folder] = count
+
+# Convert the list to a DataFrame
+final_df = pd.DataFrame(data_list)
+
+# Save the concatenated DataFrame to a new CSV file
+final_df.to_csv("Test_Data.csv", index=False)
+
+# Save the file counts to a new CSV file
+files_count_df = pd.DataFrame(list(files_count.items()), columns=['Folder', 'File_Count'])
+files_count_df.to_csv("files_count.csv", index=False)
+
+# Display the files count
+print(files_count_df)
+
+
+
+
 
 
 
