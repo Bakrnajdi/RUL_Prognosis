@@ -368,8 +368,8 @@ pd.DataFrame(y_predt).to_csv(r'/Users/bakrnajdi/Desktop/stage/Test_wavelets/Pred
 pd.DataFrame(y_pred5).to_csv(r'/Users/bakrnajdi/Desktop/stage/Test_wavelets/Predictive_maintenance_proj/Rul_Project/y_pred5.csv')
 m=y_pred1
 
-================Training Data Visualization========================================
- #Visualize Results
+#================Training Data Visualization======================================== 
+#Visualize Results
 fig, ax = plt.subplots(figsize=(15, 6))
  # Plot training data.
 sns.scatterplot(x=10 *np.arange(len(y_pred0)).ravel(), y=y_pred0.ravel(), label='training data', ax=ax,color='k',s=7);
