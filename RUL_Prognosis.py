@@ -70,15 +70,12 @@ config.gpu_options.allow_growth = True
 sess = tf.compat.v1.Session(config=config)
 
 
-<<<<<<< HEAD
 # data = pd.read_csv('Train_data_H.csv')
 # data = data.reset_index(drop=True)
 # data = data.drop(data.index[[0, 2803, 3684, 3672]])
-=======
 data = pd.read_csv('..\\Train_data_H.csv',index_col=[0])
 data = data.reset_index(drop=True)
 data = data.drop(data.index[[0, 2803, 3672]])
->>>>>>> refs/remotes/origin/main
 # cnn_data = pd.DataFrame(cnn_data)
 # data = data.drop(columns = ['Unnamed: 0'])
 print('cnn data done')
@@ -254,14 +251,10 @@ labels =np.array(pd.concat(label,ignore_index=True))
 
 
 # labels = np.array(all_health_indicators)
-<<<<<<< HEAD
 # labels = np.array(pd.read_csv('Segmented_bearing_health_indicators.csv'))
 # labels = np.array(pd.read_csv('Segmented_bearing_health_indicators.csv'))
 labels = np.array(pd.read_csv('Linear_bearing_health_indicators.csv'))
 
-=======
-labels = np.array(pd.read_csv('..\\bearing_health_indicators.csv'))
->>>>>>> refs/remotes/origin/main
 
 
 X_train, X_test, y_train, y_test = train_test_split(data1, np.array(labels), test_size=0.2, random_state=0)
