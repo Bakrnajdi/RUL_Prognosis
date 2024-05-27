@@ -58,7 +58,7 @@ import os
 import pandas as pd
 
 # Define the root directory containing the bearing folders
-root_dir = "/Users/mac/Desktop/PhD/Prognosis_RUL/phm-ieee-2012-data-challenge-dataset-master/Test_set"  # Change this to your directory path
+root_dir = "C:\\Users\\najdi.boubker\\Desktop\\phm-ieee-2012-data-challenge-dataset-master\\phm-ieee-2012-data-challenge-dataset-master\\Test_set"  # Change this to your directory path
 
 # List of test bearing folders
 test_bearing_folders = [
@@ -77,16 +77,21 @@ files_count = {}
 for folder in test_bearing_folders:
     folder_path = os.path.join(root_dir, folder)
     count = 0  # Initialize the count of files for this folder
-    for file_name in os.listdir(folder_path):
-        if file_name.startswith('acc') and file_name.endswith('.csv'):
-            file_path = os.path.join(folder_path, file_name)
-            # Read the CSV file
-            df = pd.read_csv(file_path, header=None)
-            # Extract the 5th column (index 4) with 2560 observations
-            x_vibrational_signal = df.iloc[:, 4].values
-            # Append to the data list
-            data_list.append(x_vibrational_signal)
-            count += 1  # Increment the count
+    
+    # List and sort the files in the folder
+    file_names = sorted([f for f in os.listdir(folder_path) if f.startswith('acc') and f.endswith('.csv')])
+    
+    
+    for file_name in file_names:
+        file_path = os.path.join(folder_path, file_name)
+        print(file_path)
+        # Read the CSV file
+        df = pd.read_csv(file_path, header=None)
+        # Extract the 5th column (index 4) with 2560 observations
+        x_vibrational_signal = df.iloc[:, 4].values
+        # Append to the data list
+        data_list.append(x_vibrational_signal)
+        count += 1  # Increment the count
     # Save the count for this folder
     files_count[folder] = count
 
@@ -102,4 +107,5 @@ files_count_df.to_csv("files_count.csv", index=False)
 
 # Display the files count
 print(files_count_df)
+
 
