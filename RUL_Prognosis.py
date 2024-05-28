@@ -43,6 +43,7 @@ from ssqueezepy.utils import logscale_transition_idx
 # from time_series_augmentation.utils.augmentation import scaling
 # from Bearing_Data_Train import Bearing_Data_Train
 from cwt_rp import ssq_cwt1 
+from kerastuner.tuners import RandomSearch
 # import cwt_rp
 from tensorflow.keras.mixed_precision import set_global_policy
 set_global_policy('float32')
@@ -73,9 +74,12 @@ sess = tf.compat.v1.Session(config=config)
 # data = pd.read_csv('Train_data_H.csv')
 # data = data.reset_index(drop=True)
 # data = data.drop(data.index[[0, 2803, 3684, 3672]])
+# data = pd.read_csv('Train_data_H.csv')
+# data = data.reset_index(drop=True)
+# data = data.drop(data.index[[0, 2803, 3684, 3672]])
 data = pd.read_csv('..\\Train_data_H.csv',index_col=[0])
 data = data.reset_index(drop=True)
-data = data.drop(data.index[[0, 2803, 3672]])
+# data = data.drop(data.index[[0, 2803, 3672]])
 # cnn_data = pd.DataFrame(cnn_data)
 # data = data.drop(columns = ['Unnamed: 0'])
 print('cnn data done')
@@ -252,16 +256,18 @@ labels =np.array(pd.concat(label,ignore_index=True))
 
 # labels = np.array(all_health_indicators)
 # labels = np.array(pd.read_csv('Segmented_bearing_health_indicators.csv'))
-# labels = np.array(pd.read_csv('Segmented_bearing_health_indicators.csv'))
-labels = np.array(pd.read_csv('Linear_bearing_health_indicators.csv'))
+# labels = np.array(pd.read_csv('Segmented_bearing_health_indicators.csv'))ss
+labels = np.array(pd.read_csv('Exponential_bearing_health_indicators.csv'))
 
+# labels = np.array(pd.read_csv('..\\bearing_health_indicators.csv'))
+# >>>>>>> refs/remotes/origin/main
 
 
 X_train, X_test, y_train, y_test = train_test_split(data1, np.array(labels), test_size=0.2, random_state=0)
-import keras.backend as K
+# import keras.backend as K
 
-def rmse(y_true, y_pred):
-	return K.sqrt(k.mean(k.square(y_pred - y_true)))
+# def rmse(y_true, y_pred):
+# 	return K.sqrt(k.mean(k.square(y_pred - y_true)))
 
 # =============================================================================
 # Build CNN model
@@ -277,7 +283,7 @@ def rmse_loss_fn(y_true, y_pred):
     """
     squared_difference = ops.square(y_true - y_pred)
     mean_squared_difference = ops.mean(squared_difference, axis=-1)  # Note the `axis=-1`
-    return ops.sqrt(mean_squared_difference)
+    return ops.abs(ops.sqrt(mean_squared_difference))
 
 
 # Initialize the model
@@ -305,7 +311,7 @@ Regressor.add(LSTM(256))  # You can adjust the number of LSTM units based on you
 Regressor.add(Flatten())
 Regressor.add(Dense(units=2560, activation='relu'))
 Regressor.add(Dropout(0.3))
-Regressor.add(Dense(units=768, activation='relu'))
+Regressor.add(Dense(units=769, activation='relu'))
 Regressor.add(Dropout(0.1))
 Regressor.add(Dense(1, activation='sigmoid'))
 
@@ -326,7 +332,7 @@ history = Regressor.fit(data1, labels, batch_size=batch_size, epochs=epochs,shuf
 import h5py
 from keras.models import load_model
 
-Regressor.save('..\\model1.h5')
+Regressor.save('model1.h5')
 
 
 def rmse(y_true, y_pred):
@@ -337,7 +343,7 @@ import tensorflow as tf
 # Load the model in the SavedModel format
 Regressor = tf.keras.models.load_model("model1.h5", custom_objects={'rmse': rmse})
 
-Regressor = load_model('model1.h5',custom_objects={'rmse':rmse})
+Regressor = load_model('model1.h5',custom_objects={'rmse_loss_fn':rmse_loss_fn})
 
 
 

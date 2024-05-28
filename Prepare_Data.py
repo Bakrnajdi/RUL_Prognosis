@@ -58,13 +58,11 @@ import os
 import pandas as pd
 
 # Define the root directory containing the bearing folders
-root_dir = "C:\\Users\\najdi.boubker\\Desktop\\phm-ieee-2012-data-challenge-dataset-master\\phm-ieee-2012-data-challenge-dataset-master\\Test_set"  # Change this to your directory path
+root_dir = "/Users/mac/Desktop/PhD/Prognosis_RUL/phm-ieee-2012-data-challenge-dataset-master/Test_set"  # Change this to your directory path
 
 # List of test bearing folders
 test_bearing_folders = [
-    "Bearing1_3", "Bearing1_4", "Bearing1_5", "Bearing1_6", "Bearing1_7",
-    "Bearing2_3", "Bearing2_4", "Bearing2_5", "Bearing2_6", "Bearing2_7",
-    "Bearing3_3"
+    "Bearing1_3", "Bearing1_4", "Bearing1_5", "Bearing1_6", "Bearing1_7","Bearing2_3", "Bearing2_4", "Bearing2_5", "Bearing2_6", "Bearing2_7","Bearing3_3"
 ]
 
 # Initialize a list to hold the data
@@ -85,7 +83,7 @@ for folder in test_bearing_folders:
     for file_name in file_names:
         file_path = os.path.join(folder_path, file_name)
         print(file_path)
-        # Read the CSV file
+        # Read the CSV filess
         df = pd.read_csv(file_path, header=None)
         # Extract the 5th column (index 4) with 2560 observations
         x_vibrational_signal = df.iloc[:, 4].values
@@ -107,5 +105,4 @@ files_count_df.to_csv("files_count.csv", index=False)
 
 # Display the files count
 print(files_count_df)
-
 

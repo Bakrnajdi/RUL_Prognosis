@@ -304,7 +304,7 @@ import matplotlib.pyplot as plt
 # Load the data
 file_path = 'Train_data_H.csv'  # Replace with your actual file path
 data = pd.read_csv(file_path, header=None)
-data = data.drop(data.index[[0, 2803, 3672]])
+# data = data.drop(data.index[[0, 2803, 3672]])
 
 # Define the lengths of the bearings
 bearing_lengths = [2802, 870, 911, 797, 515, 1637]
@@ -388,7 +388,7 @@ for i, length in enumerate(bearing_lengths):
 health_indicators_df = pd.DataFrame(all_health_indicators, columns=['Health Indicator'])
 
 # Save health indicators to a CSV file
-health_indicators_df.to_csv('bearing_health_indicators.csv', index=False)
+health_indicators_df.to_csv('Linear.csv', index=False)
 
 
 
@@ -815,3 +815,341 @@ health_indicators_df = pd.DataFrame(all_health_indicators, columns=['Health Indi
 health_indicators_df.to_csv('bearing_health_indicators.csv', index=False)
 
 
+
+Data = pd.read_csv('Train_data_H.csv',index_col=[0])
+Data = Data.reset_index(drop=True)
+
+
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+from scipy.interpolate import UnivariateSpline
+import matplotlib.pyplot as plt
+
+# Load the data
+file_path = 'Train_data_H.csv'  # Replace with your actual file path
+data = pd.read_csv('Train_data_H.csv',index_col=[0])
+data = data.reset_index(drop=True)
+# data = data.drop(data.index[[0, 2803, 3684, 3672]])
+
+# Define the lengths of the bearings
+bearing_lengths = [2803, 871, 911, 797, 515, 1637]
+
+# Calculate features for each row
+def calculate_features(data):
+    rms = np.sqrt(np.mean(np.square(data), axis=1))
+    kurtosis = np.mean(((data - np.mean(data, axis=1, keepdims=True))**4), axis=1) / (np.var(data, axis=1)**2)
+    skewness = np.mean(((data - np.mean(data, axis=1, keepdims=True))**3), axis=1) / (np.std(data, axis=1)**3)
+    crest_factor = np.max(np.abs(data), axis=1) / rms
+    peak_to_peak = np.ptp(data, axis=1)
+    return rms, kurtosis, skewness, crest_factor, peak_to_peak
+
+# Normalize features
+def normalize_features(features):
+    scaler = MinMaxScaler()
+    normalized_features = scaler.fit_transform(features.reshape(-1, 1)).flatten()
+    return normalized_features, scaler
+
+# Fit spline model
+def fit_spline(x, y):
+    spline = UnivariateSpline(x, y, s=0.5)  # s is a smoothing factor
+    return spline
+
+# Smooth the health indicator using exponential moving average
+def smooth_health_indicator(health_indicator, alpha=0.1):
+    ema = [health_indicator[0]]
+    for point in health_indicator[1:]:
+        ema.append(alpha * point + (1 - alpha) * ema[-1])
+    return np.array(ema)
+
+# Normalize the health indicator to ensure it starts at 0 and ends at 1
+def scale_health_indicator(health_indicator):
+    health_indicator -= health_indicator.min()  # Shift to make positive
+    health_indicator /= health_indicator.max()  # Scale to range [0, 1]
+    return health_indicator
+
+# Process each bearing separately
+start_idx = 0
+all_health_indicators = []
+for i, length in enumerate(bearing_lengths):
+    # Extract the data for the current bearing
+    end_idx = start_idx + length
+    bearing_data = data.iloc[start_idx:end_idx, :].values
+    
+    # Calculate features
+    rms, kurtosis, skewness, crest_factor, peak_to_peak = calculate_features(bearing_data)
+    
+    # Normalize the features
+    normalized_rms, _ = normalize_features(rms)
+    normalized_kurtosis, _ = normalize_features(kurtosis)
+    normalized_skewness, _ = normalize_features(skewness)
+    normalized_crest_factor, _ = normalize_features(crest_factor)
+    normalized_peak_to_peak, _ = normalize_features(peak_to_peak)
+    
+    # Use normalized RMS as the composite health indicator
+    composite_health_indicator = normalized_rms
+    
+    # Fit spline model to the composite health indicator
+    x_data = np.arange(len(composite_health_indicator))
+    spline_model = fit_spline(x_data, composite_health_indicator)
+    fitted_indicator = spline_model(x_data)
+    
+    # Ensure the health indicator starts at 0 and ends at 1
+    fitted_indicator[0] = 0
+    fitted_indicator[-1] = 1
+    
+    # Smooth the health indicator
+    smoothed_health_indicator = smooth_health_indicator(fitted_indicator)
+    
+    # Normalize the health indicator to ensure it starts at 0, ends at 1, and is positive
+    scaled_health_indicator = scale_health_indicator(smoothed_health_indicator)
+    
+    # Apply exponential function to scale the health indicator from 0 to 1
+    scaling_factor = 5  # Adjust the scaling factor to control the steepness of the exponential curve
+    exponential_hi = 1 - np.exp(-scaling_factor * scaled_health_indicator)
+    
+    all_health_indicators.extend(exponential_hi)
+    
+    # Plot the data for the current bearing
+    plt.figure(figsize=(12, 6))
+    plt.plot(composite_health_indicator, label='Composite Health Indicator')
+    plt.plot(fitted_indicator, label='Fitted Spline Indicator', linestyle='--')
+    plt.plot(exponential_hi, label='Exponential HI', linestyle='-.')
+    plt.legend()
+    plt.title(f'Spline Trend Labeling for Bearing {i}')
+    plt.xlabel('Time')
+    plt.ylabel('Normalized Value / Health Indicator')
+    plt.show()
+    
+    # Update the starting index for the next bearing
+    start_idx = end_idx
+
+# Convert health indicators to DataFrame
+health_indicators_df = pd.DataFrame(all_health_indicators, columns=['Health Indicator'])
+
+# Save health indicators to a CSV file
+health_indicators_df.to_csv('Spline_Fit_bearing_health_indicators.csv', index=False)
+
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
+
+# Load the data
+file_path = 'Train_data_H.csv'  # Replace with your actual file path
+data = pd.read_csv('Train_data_H.csv',index_col=[0])
+data = data.reset_index(drop=True)
+# data = data.drop(data.index[[0, 2803, 3684, 3672]])
+
+# Define the lengths of the bearings
+bearing_lengths = [2803, 871, 911, 797, 515, 1637]
+
+
+# Calculate features for each row
+def calculate_features(data):
+    rms = np.sqrt(np.mean(np.square(data), axis=1))
+    return rms
+
+# Normalize features
+def normalize_features(features):
+    scaler = MinMaxScaler()
+    normalized_features = scaler.fit_transform(features.reshape(-1, 1)).flatten()
+    return normalized_features, scaler
+
+# Create exponential curve
+def diverging_exponential_curve(length, scaling_factor=5):
+    x = np.linspace(0, 1, length)
+    exponential_hi = np.exp(scaling_factor * x) - 1
+    exponential_hi /= exponential_hi.max()  # Normalize to range [0, 1]
+    return exponential_hi
+
+# Process each bearing separately
+start_idx = 0
+all_health_indicators = []
+for i, length in enumerate(bearing_lengths):
+    # Extract the data for the current bearing
+    end_idx = start_idx + length
+    bearing_data = data.iloc[start_idx:end_idx, :].values
+    
+    # Calculate features
+    rms = calculate_features(bearing_data)
+    
+    # Normalize the features
+    normalized_rms, _ = normalize_features(rms)
+    
+    # Create diverging exponential health indicator curve
+    exponential_hi = diverging_exponential_curve(len(normalized_rms))
+    
+    all_health_indicators.extend(exponential_hi)
+    
+    # Plot the data for the current bearing
+    plt.figure(figsize=(12, 6))
+    plt.plot(normalized_rms, label='Normalized RMS')
+    plt.plot(exponential_hi, label='Diverging Exponential HI', linestyle='--')
+    plt.legend()
+    plt.title(f'Diverging Exponential Health Indicator for Bearing {i}')
+    plt.xlabel('Time')
+    plt.ylabel('Health Indicator')
+    plt.show()
+    
+    # Update the starting index for the next bearing
+    start_idx = end_idx
+
+# Convert health indicators to DataFrame
+health_indicators_df = pd.DataFrame(all_health_indicators, columns=['Health Indicator'])
+
+# Save health indicators to a CSV file
+health_indicators_df.to_csv('Exponential_bearing_health_indicators.csv', index=False)
+
+
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
+
+# Load the data
+file_path = 'Train_data_H.csv'  # Replace with your actual file path
+data = pd.read_csv('Train_data_H.csv',index_col=[0])
+data = data.reset_index(drop=True)
+# data = data.drop(data.index[[0, 2803, 3684, 3672]])
+
+# Define the lengths of the bearings
+bearing_lengths = [2803, 871, 911, 797, 515, 1637]
+
+# Calculate features for each row
+def calculate_features(data):
+    rms = np.sqrt(np.mean(np.square(data), axis=1))
+    return rms
+
+# Normalize features
+def normalize_features(features):
+    scaler = MinMaxScaler()
+    normalized_features = scaler.fit_transform(features.reshape(-1, 1)).flatten()
+    return normalized_features, scaler
+
+# Create segmented linear and exponential curve
+def segmented_labeling_curve(length):
+    t1, hi1 = 25, 5
+    t2, hi2 = 50, 15
+    t3, hi3 = 75, 40
+    
+    x = np.linspace(0, 100, length)
+    y = np.piecewise(x, 
+                     [x <= t1, (x > t1) & (x <= t2), (x > t2) & (x <= t3), x > t3],
+                     [lambda x: 0.2 * x,
+                      lambda x: 0.4 * x - 5,
+                      lambda x: 1.0 * x - 35,
+                      lambda x: 2.4 * x - 140])
+    
+    # Normalize y to range [0, 1]
+    y_min, y_max = y.min(), y.max()
+    y_normalized = (y - y_min) / (y_max - y_min)
+    
+    return y_normalized
+
+# Process each bearing separately
+start_idx = 0
+all_health_indicators = []
+for i, length in enumerate(bearing_lengths):
+    # Extract the data for the current bearing
+    end_idx = start_idx + length
+    bearing_data = data.iloc[start_idx:end_idx, :].values
+    
+    # Calculate features
+    rms = calculate_features(bearing_data)
+    
+    # Normalize the features
+    normalized_rms, _ = normalize_features(rms)
+    
+    # Create segmented labeling health indicator curve
+    segmented_hi = segmented_labeling_curve(len(normalized_rms))
+    
+    all_health_indicators.extend(segmented_hi)
+    
+    # Plot the data for the current bearing
+    plt.figure(figsize=(12, 6))
+    plt.plot(normalized_rms, label='Normalized RMS')
+    plt.plot(segmented_hi, label='Segmented Labeling HI', linestyle='--')
+    plt.legend()
+    plt.title(f'Segmented Labeling Health Indicator for Bearing {i}')
+    plt.xlabel('Time')
+    plt.ylabel('Health Indicator')
+    plt.show()
+    
+    # Update the starting index for the next bearing
+    start_idx = end_idx
+
+# Convert health indicators to DataFrame
+health_indicators_df = pd.DataFrame(all_health_indicators, columns=['Health Indicator'])
+
+# Save health indicators to a CSV file
+health_indicators_df.to_csv('Segmented_bearing_health_indicators.csv', index=False)
+
+
+
+
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
+
+# Load the data
+file_path = 'Train_data_H.csv'  # Replace with your actual file path
+data = pd.read_csv(file_path, index_col=[0])
+data = data.reset_index(drop=True)
+
+# Define the lengths of the bearings
+bearing_lengths = [2803, 871, 911, 797, 515, 1637]
+
+# Calculate features for each row
+def calculate_features(data):
+    rms = np.sqrt(np.mean(np.square(data), axis=1))
+    return rms
+
+# Normalize features
+def normalize_features(features):
+    scaler = MinMaxScaler()
+    normalized_features = scaler.fit_transform(features.reshape(-1, 1)).flatten()
+    return normalized_features, scaler
+
+# Create linear decay curve
+def linear_decay_curve(length):
+    return np.linspace(0, 1, length)
+
+# Process each bearing separately
+start_idx = 0
+all_health_indicators = []
+for i, length in enumerate(bearing_lengths):
+    # Extract the data for the current bearing
+    end_idx = start_idx + length
+    bearing_data = data.iloc[start_idx:end_idx, :].values
+    
+    # Calculate features
+    rms = calculate_features(bearing_data)
+    
+    # Normalize the features
+    normalized_rms, _ = normalize_features(rms)
+    
+    # Create linear health indicator curve
+    linear_hi = linear_decay_curve(len(normalized_rms))
+    
+    all_health_indicators.extend(linear_hi)
+    
+    # Plot the data for the current bearing
+    plt.figure(figsize=(12, 6))
+    plt.plot(normalized_rms, label='Normalized RMS')
+    plt.plot(linear_hi, label='Linear Health Indicator', linestyle='--')
+    plt.legend()
+    plt.title(f'Linear Health Indicator for Bearing {i}')
+    plt.xlabel('Time')
+    plt.ylabel('Health Indicator')
+    plt.show()
+    
+    # Update the starting index for the next bearing
+    start_idx = end_idx
+
+# Convert health indicators to DataFrame
+health_indicators_df = pd.DataFrame(all_health_indicators, columns=['Health Indicator'])
+
+# Save health indicators to a CSV file
+health_indicators_df.to_csv('Linear_bearing_health_indicators.csv', index=False)

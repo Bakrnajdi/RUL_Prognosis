@@ -13,8 +13,8 @@ from ssqueezepy.utils import logscale_transition_idx
 
 
 
-from tensorflow.keras.mixed_precision import set_global_policy
-set_global_policy('float32')
+# from tensorflow.keras.mixed_precision import set_global_policy
+# set_global_policy('float32')
 
 import tensorflow as tf
 from tensorflow.keras import layers, models
@@ -153,7 +153,7 @@ print(data2.shape)
 del tnew_data
 del tresData
 
-
+# np.save("{}.npy".format(specific_bearing_folder), data2)
 
 
 y_train_pred = Regressor.predict(data2)
