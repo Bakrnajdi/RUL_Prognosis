@@ -257,7 +257,7 @@ labels =np.array(pd.concat(label,ignore_index=True))
 # labels = np.array(all_health_indicators)
 # labels = np.array(pd.read_csv('Segmented_bearing_health_indicators.csv'))
 # labels = np.array(pd.read_csv('Segmented_bearing_health_indicators.csv'))ss
-labels = np.array(pd.read_csv('Exponential_bearing_health_indicators.csv'))
+labels = np.array(pd.read_csv('Segmented_bearing_health_indicators.csv'))
 
 # labels = np.array(pd.read_csv('..\\bearing_health_indicators.csv'))
 # >>>>>>> refs/remotes/origin/main
@@ -324,7 +324,7 @@ optimizer = keras.optimizers.Adam(learning_rate=6.8e-05)
 Regressor.compile(loss=rmse_loss_fn, optimizer=optimizer, metrics=[keras.metrics.RootMeanSquaredError()])
 
 
-epochs = 60
+epochs = 100
 batch_size = 256
 history = Regressor.fit(data1, labels, batch_size=batch_size, epochs=epochs,shuffle = True)
 # history = Regressor.fit(X_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(X_test, y_test),shuffle = True)
